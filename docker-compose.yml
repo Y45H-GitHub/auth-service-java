@@ -1,0 +1,45 @@
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: auth-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: Yash@3221
+      MYSQL_DATABASE: auth_project
+    ports:
+      - "3307:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    networks:
+      - auth-network
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 20s
+      retries: 10
+
+  app:
+    image: auth-project:v1
+    container_name: auth-app
+    environment:
+      DATABASE_URL: jdbc:mysql://mysql:3306/auth_project
+      DATABASE_USERNAME: root
+      DATABASE_PASSWORD: Yash@3221
+      JWT_SECRET: mySecretKey1234567890123456789012345678901234567890
+      JWT_ACCESS_TOKEN_EXPIRATION: 900000
+      JWT_REFRESH_TOKEN_EXPIRATION: 604800000
+      JWT_REFRESH_TOKEN_COOKIE_NAME: refreshToken
+      JWT_REFRESH_TOKEN_SECURE: true
+      JWT_REFRESH_TOKEN_HTTP_ONLY: true
+    ports:
+      - "8080:8080"
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - auth-network
+
+volumes:
+  mysql_data:
+
+networks:
+  auth-network:
+    driver: bridge
